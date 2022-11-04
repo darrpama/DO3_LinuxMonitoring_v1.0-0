@@ -14,4 +14,3 @@ do
     printf "%d - %s, %s, %s\n" $count "$path" "$size" "$md5"
 done
 }
-
