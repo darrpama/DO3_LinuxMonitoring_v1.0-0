@@ -1,13 +1,20 @@
 #!/bin/bash
+#
+# There is script witch takes one text parameter, not number
+
+source err.sh
+
 if [ $# -eq 1 ]
 then
 	check=$(echo "$1" | grep -E "^\-?[0-9]*\.?[0-9]+$")
 	if [ "$check" != '' ]
 	then
-		echo "aboba"
+		err "Скрипт принимает только один текстовый параметр"
+		exit 1
 	else
-		echo "not aboba"
+		echo "Всё отлично"
 	fi
 else
-	echo "There is not 1 param"
+	err "Скрипт принимает только один текстовый параметр"
+	exit 1
 fi
