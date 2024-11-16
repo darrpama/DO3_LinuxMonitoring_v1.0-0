@@ -1,152 +1,325 @@
 # Linux Monitoring v1.0
 
-> При старте работы над проектом просим вас постараться хронометрировать время работы над проектом.
-> По завершении работы над проектом просим вас ответить на два вопроса [в этом опросе](https://forms.gle/iWe8U8GKmbxqvZJfA)
+Проект, в котором я выводил разную информацию о системе и о каталогах с помощью bash скриптов. Сделана валидация входных значений, можно поменять цвет вывода информации в консоль в 4 скрипте.
 
-Linux basic bash scripting and system research.
+Сами скрипты есть в этом файле и в папках 01 - 05
 
-The russian version of the task can be found in the repository.
+1. [Задачи](#chapter-iii) \
+   1.1. [Проба пера](#part-1-проба-пера)  
+   1.2. [Исследование системы](#part-2-исследование-системы)  
+   1.3. [Визуальное оформление вывода для скрипта исследования системы](#part-3-визуальное-оформление-вывода-для-скрипта-исследования-системы)  
+   1.4. [Конфигурирование визуального оформления вывода для скрипта исследования системы](#part-4-конфигурирование-визуального-оформления-вывода-для-скрипта-исследования-системы)     
+   1.5. [Исследование файловой системы](#part-5-исследование-файловой-системы)
 
-## Contents
+### Part 1. Проба пера
 
-1. [Chapter I](#chapter-i) 
-2. [Chapter II](#chapter-ii) \
-    2.1. [Bash](#bash) \
-    2.2. [Shell](#shell)
-3. [Chapter III](#chapter-iii) \
-    3.1. [First effort](#part-1-first-effort)  
-    3.2. [System research](#part-2-system-research)  
-    3.3. [Visual output design for the system research script](#part-3-visual-output-design-for-the-system-research-script)   
-    3.4. [Configuring visual output design for the system research script.](#part-4-configuring-visual-output-design-for-the-system-research-script)  
-    3.5. [File system research](#part-5-file-system-research)    
-4. [Chapter IV](#chapter-iv)
+**== Задание и выполнение ==**
 
-## Chapter I
+Написать bash-скрипт. Скрипт запускается с одним параметром. Параметр текстовый.
+Скрипт выводит значение параметра.  
+Если параметр - число, то должно выводится сообщение о некорректности ввода.
 
-![linux_monitoring_v1](misc/images/linux_monitoring_v1.png)
+### main.sh:
+```
+#!/bin/bash
 
-Planet Earth, USA, California, nowadays.
+source err.sh
 
-You have been working late, as usual, to avoid driving home through rush hour traffic.
-You think there is no one else in the office but you, until you hear noises from the office next door.
-You don't pay much attention to it, any colleague might have stayed late to finish his business.
-Suddenly you hear a yell from that very office (your colleague obviously thought he was alone):
+if [ $# -eq 1 ] 
+then
+    check=$(echo "$1" | grep -E "^\-?[0-9]*\.?[0-9]+$")
+    if [ "$check" != '' ]
+    then
+        err "aboba"
+    else
+        echo "OK"
+    fi  
+else
+    err "There is not 1 param"
+fi
+```
+### err.sh:
+```
+#!/bin/bash
+#
+# There is function to print errors into the STDERR (&2)
+#
+# if ! do_something; then
+#   err "Unable to do_something"
+#   exit 1
+# fi
 
-`-` Ugh, I am so tired of collecting system information by hand from these computers on Linux. I probably should have learned it better before applying for the job.
+err() {
+  echo "[$(date +'%Y-%m-%dT%H:%M:%S%z')]: $*" >&2
+}
+```
+### Вывод скрипта:
+![first bash script text and use](/src/screenshots/01.png)
 
-You quickly realise that this is your new system administrator, hired just a couple of weeks ago. At the initiative of your teammate Mike, Linux have been installed on several machines in the office.
-Your sysadmin is really trying, he's just unlucky to get a job now. \
-"Poor guy. -- you thought. -- I should try to help him, since I have the time!"
+### Part 2. Исследование системы
 
-You go to Mike's desk and do something bad: you look in his drawer. You are lucky to find exactly what you were looking for: clippings from articles about bash and shell.
+**== Задание и выполнение ==**
 
-## Chapter II
+Написать bash-скрипт. Скрипт должен вывести на экран информацию в виде:
 
-### Bash
+**HOSTNAME** = _сетевое имя_  
+**TIMEZONE** = _временная зона в виде: **America/New_York UTC -5** (временная зона, должна браться из системы и быть корректной для текущего местоположения)_  
+**USER** = _текущий пользователь который запустил скрипт_  
+**OS** = _тип и версия операционной системы_  
+**DATE** = _текущее время в виде: **12 May 2020 12:24:36**_  
+**UPTIME** = _время работы системы_  
+**UPTIME_SEC** = _время работы системы в секундах_  
+**IP** = _ip-адрес машины в любом из сетевых интерфейсов_  
+**MASK** = _сетевая маска любого из сетевых интерфейсов в виде: **xxx.xxx.xxx.xxx**_  
+**GATEWAY** = _ip шлюза по умолчанию_  
+**RAM_TOTAL** = _размер оперативной памяти в Гб c точностью три знака после запятой в виде: **3.125 GB**_  
+**RAM_USED** = _размер используемой памяти в Гб c точностью три знака после запятой_  
+**RAM_FREE** = _размер свободной памяти в Гб c точностью три знака после запятой_  
+**SPACE_ROOT** = _размер рутового раздела в Mб с точностью два знака после запятой в виде: **254.25 MB**_  
+**SPACE_ROOT_USED** = _размер занятого пространства рутового раздела в Mб с точностью два знака после запятой_  
+**SPACE_ROOT_FREE** = _размер свободного пространства рутового раздела в Mб с точностью два знака после запятой_
 
->Bash is the shell, or command language interpreter, for the GNU operating system.
->
->The name is an acronym for the ‘Bourne-Again SHell’, a pun on Stephen Bourne, the author of the direct ancestor of the current Unix shell sh, which appeared in the Seventh Edition Bell Labs Research version of Unix.
->
->Bash is largely compatible with sh and incorporates useful features from the Korn shell ksh and the C shell csh. It is intended to be a conformant implementation of the IEEE POSIX Shell and Tools portion of the IEEE POSIX specification (IEEE Standard 1003.1). It offers functional improvements over sh for both interactive and programming use.
->
->While the GNU operating system provides other shells, including a version of csh, Bash is the default shell. Like other GNU software, Bash is quite portable. It currently runs on nearly every version of Unix and a few other operating systems - independently-supported ports exist for MS-DOS, OS/2, and Windows platforms.
+После вывода значений предложить записать данные в файл (предложить пользователю ответить **Y/N**).  
+Ответы **Y** и **y** считаются положительными, все прочие - отрицательными.
+При согласии пользователя, в текущей директории создать файл содержащий информацию, которая была выведена на экран.  
+Название файла должно иметь вид: **DD_MM_YY_HH_MM_SS.status** (Время в имени файла должно указывать момент сохранения данных).
 
-### Shell
+### main.sh:
+```
+#!/bin/bash
 
->At its base, a shell is simply a macro processor that executes commands.
->
->A Unix shell is both a command interpreter and a programming language. As a command interpreter, the shell provides the user interface to the rich set of GNU utilities. Files containing commands can be created, and become commands themselves. These new commands have the same status as system commands, allowing users or groups to establish custom environments to automate their common tasks.
->
->Shells may be used interactively or non-interactively. In interactive mode, they accept input typed from the keyboard. When executing non-interactively, shells execute commands read from a file.
->
->A shell allows execution of GNU commands, both synchronously and asynchronously.
->
->While executing commands is essential, most of the power (and complexity) of shells is due to their embedded programming languages. Like any high-level language, the shell provides variables, flow control constructs, quoting, and functions.
->
->Shells offer features geared specifically for interactive use rather than to augment the programming language. These interactive features include job control, command line editing, command history and aliases.
+source out.sh
+output
+echo "Записать данные в файл? [Y/n]"
+read answer
+if [[ $answer = Y || $answer = y ]]; then
+        file=$(date +"%d_%m_%Y_%H_%M_%S".status)
+        output>$file
+fi
 
-There was a folder labeled "materials" underneath the article clippings in Mike's drawer. As you looked in it, you found several sheets describing the features of the bash scripts.
+```
 
-## Chapter III
+### out.sh:
+```
+#!/bin/bash
 
-- The written bash scripts must be in the src folder
-- For each task you must create a folder with the following name: **0x**, where x is the task number.
-- All scripts must be decomposed and split into several files
-- The main script file for each task must be named **main.sh**
-- All scripts should have checks for incorrect input (not all parameters specified, wrong format parameters, etc.)
-- All scripts must be run on a virtual machine *Ubuntu Server 20.04 LTS*
+function output() {
+  hostname=$HOSTNAME
+  timezone=$(timedatectl | awk ' /Time zone/{print $3" "$4" "$5}')
+  user=$(whoami)
+  OS=$(uname -s)
+  ip=($(ifconfig | awk ' /inet /{print $2} ' | xargs))
+  mask=($(ifconfig | awk ' /inet /{print $4}' | xargs))
+  gateway=$(ip r | grep 'default via' | awk '{print $3}' | xargs)
+  ramTotal=$(free -m | grep Mem | awk '{printf "%.3f\n", $2 / 1024}')
+  ramUsed=$(free -m | grep Mem | awk '{printf "%.3f\n", $3 / 1024}')
+  ramFree=$(free -m | grep Mem | awk '{printf "%.3f\n", $4 / 1024}')
+  spaceRoot=$(df -hk | grep "\/$" | awk '{printf "%.2f\n", $2 / 1024}')
+  spaceRootUsed=$(df -hk | grep "\/$" | awk '{printf "%.2f\n", $3 / 1024}')
+  spaceRootFree=$(df -hk | grep "\/$" | awk '{printf "%.2f\n", $4 / 1024}')
+  echo "hostname          = $hostname"
+  echo "timezone          = $timezone"
+  echo "user              = $user"
+  echo "OS                = $OS"
+  ### 
+  echo -n "ip                = "
+  for (( i = 0; i < ${#ip[*]} ; i++ )); do
+    echo -n "${ip[i]} "
+  done
+  echo -e""
+  
+  echo -n "mask              = "
+  for (( i = 0; i < ${#mask[*]} ; i++ )); do
+    echo -n "${mask[i]} "
+  done
+  echo -e""
+  ### 
+  echo "gateway           = $gateway"
+  echo "Ram total         = $ramTotal Gb"
+  echo "Ram used          = $ramUsed Gb"
+  echo "Ram free          = $ramFree Gb"
+  echo "Space root        = $spaceRoot Mb"
+  echo "Space root used   = $spaceRootUsed Mb"
+  echo "Space root free   = $spaceRootFree Mb"
+}
+```
+### Вывод скрипта:
+![secound bash script output](/src/screenshots/02.png)
 
-## Part 1. First effort
+### Part 3. Визуальное оформление вывода для скрипта исследования системы
 
-Before you start helping your colleague, you decide to test your knowledge on a very simple program.
+**== Задание и выполнение ==**
 
-**== Task ==**
-
-Write a bash script. The script is run with one parameter. It is a text parameter.  
-The script outputs the value of the parameter.  
-If the parameter is a number, the script must output an invalid input message.
-
-## Part 2. System research
-
-Now you’re sure that you’re ready to get down to the initial idea. You quickly think of the information about the system you need to output and get to work.
-
-**== Task ==**
-
-Write a bash script. The script should output the following information:
-
-**HOSTNAME** = _network name_  
-**TIMEZONE** = _time zone as: **America/New_York UTC -5** (time zone must be taken from the system and be correct for the current location)_  
-**USER** = _current user who ran the script_  
-**OS** = _type and version of operating system_  
-**DATE** = _current time as: **12 May 2020 12:24:36**_  
-**UPTIME** = _system uptime_  
-**UPTIME_SEC** = _system uptime in seconds_  
-**IP** = _ip address of the machine on any of the network interfaces  
-**MASK** = _network mask of any of the network interfaces as: **xxx.xxx.xxx.xxx**_.  
-**GATEWAY** = _default gateway ip_  
-**RAM_TOTAL** = _main memory size in GB with an accuracy of three decimal places as: **3.125 GB**_  
-**RAM_USED** = _used memory size in GB with an accuracy of three decimal places_  
-**RAM_FREE** = _free memory size in GB, with an accuracy of three decimal places_  
-**SPACE_ROOT** = _root partition size in MB, with an accuracy of two decimal places, as **254.25 MB**_  
-**SPACE_ROOT_USED** = _size of used space of the root partition in MB, with an accuracy of two decimal places_  
-**SPACE_ROOT_FREE** = _size of free space of the root partition in MB, with an accuracy of two decimal places_
-
-After outputting the values, suggest writing the data to a file (ask the user to answer **Y/N**).  
-Responses **Y** and **y** are considered positive, all others - negative.
-
-If the user agrees, create a file in the current directory containing the information that had been outputted.
-The file name must looks like: **DD_MM_YY_HH_MM_SS.status** (The time in the file name must indicate when the data was saved).
-
-## Part 3. Visual output design for the system research script
-
-Everything is ready! But it looks so boring... We need to add more colours to this world!
-
-**== Task ==**
-
-Write a bash script. Use the script from [**Part 2**](#part-2-system-research) and remove the part where the data is saved to a file.  The script is run with 4 parameters. The parameters are numeric. From 1 to 6, for example:  
+Написать bash-скрипт. За основу взять скрипт из [**Part 2**](#part-2-исследование-системы) и убрать из него часть, ответственную за сохранение данных в файл.  
+Скрипт запускается с 4 параметрами. Параметры числовые. От 1 до 6, например:  
 `script03.sh 1 3 4 5`
 
-Colour designations: (1 - white, 2 - red, 3 - green, 4 - blue, 5 - purple, 6 - black)
+Обозначения цветов: (1 - white, 2 - red, 3 - green, 4 - blue, 5 – purple, 6 - black)  
+**Параметр 1** - это фон названий значений (HOSTNAME, TIMEZONE, USER и т.д.)  
+**Параметр 2** - это цвет шрифта названий значений (HOSTNAME, TIMEZONE, USER и т.д.)  
+**Параметр 3** - это фон значений (после знака '=')  
+**Параметр 4** - это цвет шрифта значений (после знака '=')
 
-**Parameter 1** is the background of the value names (HOSTNAME, TIMEZONE, USER etc.)  
-**Parameter 2** is the font colour of the value names (HOSTNAME, TIMEZONE, USER etc.)  
-**Parameter 3** is the background of the values (after the '=' sign)  
-**Parameter 4** is the font colour of the values (after the '=' sign)
+Цвета шрифта и фона одного столбца не должны совпадать.  
+При вводе совпадающих значений должно выводится сообщение, описывающее проблему, и предложение повторно вызвать скрипт.  
+После вывода сообщения, программа должна корректно завершится.
 
-The font and background colours of one column must not match.  
-If matching values are entered, there must be a message describing the problem and offering to call the script again.
-After the message output, the program should exit correctly.
+### main.sh:
+```
+#!/bin/bash
+                                                                               
+source out.sh
+source check.sh
+source color.sh
+source ../01/err.sh
 
-## Part 4. Configuring visual output design for the system research script
+whiteF="\033[97m"
+redF="\033[31m"
+greenF="\033[32m"
+blueF="\033[34m"
+purpleF="\033[35m"
+blackF="\033[30m"
 
-Now everything looks nice! But I don't want to have to enter the colours as parameters every time... I'll have to come up with something more convenient.
+whiteBG="\033[107m"
+redBG="\033[41m"
+greenBG="\033[42m"
+blueBG="\033[44m"
+purpleBG="\033[45m"
+blackBG="\033[40m"
+NORMAL="\033[0m"
 
-**== Task ==**
+BG1=0;
+F1=0;
+BG2=0;
+F2=0;
 
-Write a bash script. Use the script from [**Part 3**](#part-3-visual-output-design-for-the-system-research-script). The colour designations are similar. The script runs without parameters. The parameters are set in the configuration file before the script is running.
+check "$@"
+```
 
-This is how the configuration file must look like:
+### check.sh:
+```
+#!/bin/bash
+
+function check() {
+  if [[ $# = 4 ]]; then
+    for i in "$@"; do
+      if [[ i -lt 1 ]] || [[ i -gt 6 ]]; then
+        err "Входные параметры: [1-6] [1-6] [1-6] [1-6]"
+        exit 1
+      fi
+    done
+    colorCheck "$@"
+  else
+    err "Входные параметры: [1-6] [1-6] [1-6] [1-6]"
+    exit 1
+  fi
+}
+
+function colorCheck() {
+  if [[ "$1" = "$2" ]] || [[ "$3" = "$4" ]]; then
+    err "Цвет фона должен отличаться от цвета шрифта"
+    exit 1
+  else
+    setBG "$1" BG1
+    setBG "$3" BG2
+    setF "$2" FG1
+    setF "$4" FG2
+    output
+  fi
+}
+```
+### color.sh:
+```
+#!/bin/bash
+
+function setBG() {
+  if [[ $1 -eq 1 ]]; then
+    eval "$2='$whiteBG'"
+  elif [[ $1 -eq 2 ]]; then
+    eval "$2='$redBG'"
+  elif [[ $1 -eq 3 ]]; then
+    eval "$2='$greenBG'"
+  elif [[ $1 -eq 4 ]]; then
+    eval "$2='$blueBG'"
+  elif [[ $1 -eq 5 ]]; then
+    eval "$2='$purpleBG'"
+  elif [[ $1 -eq 6 ]]; then
+    eval "$2='$blackBG'"
+  fi
+}
+
+function setF() {
+  if [[ $1 -eq 1 ]]; then
+    eval "$2='$whiteF'"
+  elif [[ $1 -eq 2 ]]; then
+    eval "$2='$redF'"
+  elif [[ $1 -eq 3 ]]; then
+    eval "$2='$greenF'"
+  elif [[ $1 -eq 4 ]]; then
+    eval "$2='$blueF'"
+  elif [[ $1 -eq 5 ]]; then
+    eval "$2='$purpleF'"
+  elif [[ $1 -eq 6 ]]; then
+    eval "$2='$blackF'"
+  fi
+}
+```
+### out.sh:
+```
+#!/bin/bash
+
+function output() {
+  hostname=$HOSTNAME
+  timezone=$(timedatectl | awk ' /Time zone/{print $3" "$4" "$5}')
+  user=$(whoami)
+  OS=$(uname -s)
+  ip=($(ifconfig | awk ' /inet /{print $2} ' | xargs))
+  mask=($(ifconfig | awk ' /inet /{print $4}' | xargs))
+  gateway=$(ip r | grep 'default via' | awk '{print $3}' | xargs)
+  ramTotal=$(free -m | grep Mem | awk '{printf "%.3f\n", $2 / 1024}')
+  ramUsed=$(free -m | grep Mem | awk '{printf "%.3f\n", $3 / 1024}')
+  ramFree=$(free -m | grep Mem | awk '{printf "%.3f\n", $4 / 1024}')
+  spaceRoot=$(df -hk | grep "\/$" | awk '{printf "%.2f\n", $2 / 1024}')
+  spaceRootUsed=$(df -hk | grep "\/$" | awk '{printf "%.2f\n", $3 / 1024}')
+  spaceRootFree=$(df -hk | grep "\/$" | awk '{printf "%.2f\n", $4 / 1024}')
+  echo -e "${BG1}${FG1}hostname${NORMAL}          = ${BG2}${FG2}$hostname${NORMAL}"
+  echo -e "${BG1}${FG1}timezone${NORMAL}          = ${BG2}${FG2}$timezone${NORMAL}"
+  echo -e "${BG1}${FG1}user${NORMAL}              = ${BG2}${FG2}$user${NORMAL}"
+  echo -e "${BG1}${FG1}OS${NORMAL}                = ${BG2}${FG2}$OS${NORMAL}"
+  ###
+  echo -n -e "${BG1}${FG1}ip${NORMAL}                = "
+  for (( i = 0; i < ${#ip[*]} ; i++ )); do
+          echo -n -e "${BG2}${FG2}${ip[i]} "
+  done
+  echo -e "${NORMAL}"
+
+  echo -n -e "${BG1}${FG1}mask${NORMAL}              = "
+  for (( i = 0; i < ${#mask[*]} ; i++ )); do
+          echo -n -e "${BG2}${FG2}${mask[i]} "
+  done
+  echo -e "${NORMAL}"
+  ###
+  echo -e "${BG1}${FG1}gateway${NORMAL}           = ${BG2}${FG2}$gateway${NORMAL}"
+  echo -e "${BG1}${FG1}Ram total${NORMAL}         = ${BG2}${FG2}$ramTotal Gb${NORMAL}"
+  echo -e "${BG1}${FG1}Ram used${NORMAL}          = ${BG2}${FG2}$ramUsed Gb${NORMAL}"
+  echo -e "${BG1}${FG1}Ram free${NORMAL}          = ${BG2}${FG2}$ramFree Gb${NORMAL}"
+  echo -e "${BG1}${FG1}Space root${NORMAL}        = ${BG2}${FG2}$spaceRoot Mb${NORMAL}"
+  echo -e "${BG1}${FG1}Space root used${NORMAL}   = ${BG2}${FG2}$spaceRootUsed Mb${NORMAL}"
+  echo -e "${BG1}${FG1}Space root free${NORMAL}   = ${BG2}${FG2}$spaceRootFree Mb${NORMAL}"
+}
+```
+### Вывод скрипта:
+![third bash script output](/src/screenshots/03.png)
+
+### Part 4. Конфигурирование визуального оформления вывода для скрипта исследования системы
+
+Вот теперь всё красиво! Но как же не хочется каждый раз вбивать цвета как параметры... Надо придумать что-нибудь более удобное.
+
+**== Задание ==**
+
+Написать bash-скрипт. За основу берется скрипт из [**Part 3**](#part-3-визуальное-оформление-вывода-для-скрипта-исследования-системы). Обозначения цветов аналогичные.  
+Скрипт запускается без параметров. Параметры задаются в конфигурационном файле до запуска скрипта.  
+Конфигурационный файл должен иметь вид:
 ```
 column1_background=2
 column1_font_color=4
@@ -154,10 +327,9 @@ column2_background=5
 column2_font_color=1
 ```
 
-If one or more parameters are not set in the configuration file, the colour must be substituted from the default colour scheme. (Choice is at the developer's discretion).
+Если один или несколько параметров не заданы в конфигурационном файле, то цвет должен подставляться из цветовой схемы, заданной по умолчанию. (Выбор на усмотрение разработчика).
 
-
-After the system information output from [**Part 3**](#part-3-visual-output-design-for-the-system-research-script), you should output the colour scheme by indenting one empty line as follows:
+После вывода информации о системе из [**Part 3**](#part-3-визуальное-оформление-вывода-для-скрипта-исследования-системы), нужно, сделав отступ в одну пустую строку, вывести цветовую схему в следующем виде:
 ```
 Column 1 background = 2 (red)
 Column 1 font color = 4 (blue)
@@ -165,7 +337,7 @@ Column 2 background = 5 (purple)
 Column 2 font color = 1 (white)
 ```
 
-When running the script with the default colour scheme, the output should look like this:
+При запуске скрипта с цветовой схемой по умолчанию вывод должен иметь вид:
 ```
 Column 1 background = default (black)
 Column 1 font color = default (white)
@@ -173,26 +345,187 @@ Column 2 background = default (red)
 Column 2 font color = default (blue)
 ```
 
-## Part 5. File system research
+### main.sh:
+```
+#!/bin/bash
 
-Now that the system information output is prepared, looks nice and is convenient, you can get down to the second part of the plan.
+source outColor.sh
+source out.sh
+source check.sh
 
-**== Task ==**
+whiteF="\033[97m"
+redF="\033[31m"
+greenF="\033[32m"
+blueF="\033[34m"
+purpleF="\033[35m"
+blackF="\033[30m"
 
-Write a bash script. The script is run with a single parameter.  
-The parameter is an absolute or relative path to a directory. The parameter must end with '/', for example:  
+whiteBG="\033[107m"
+redBG="\033[41m"
+greenBG="\033[42m"
+blueBG="\033[44m"
+purpleBG="\033[45m"
+blackBG="\033[40m"
+NORMAL="\033[0m"
+
+BG1=0;
+F1=0;
+BG2=0;
+F2=0;
+
+check-1 "$@"
+```
+
+### check.sh:
+```
+#!/bin/bash
+
+source config.txt
+source ./../01/err.sh
+source ./../03/check.sh
+source ./../03/color.sh
+source ./../03/out.sh
+source outColor.sh
+
+function check-1() {
+  if [[ $# = 0 ]]; then
+    BG1=$column1_background
+    BG2=$column2_background
+    FG1=$column1_font_color
+    FG2=$column2_font_color
+
+    if [[ -z $BG1 ]] || [[ -z $BG2 ]] || [[ -z $FG1 ]] || [[ -z $FG2 ]]; then
+      BG1=2; BG2=3; FG1=3; FG2=4;
+
+      colorCheck $BG1 $FG1 $BG2 $FG2
+      echo ""
+      outputColor default
+    else
+      check "$BG1" "$FG1" "$BG2" "$FG2"
+      echo ""
+      outputColor
+  fi
+  else
+    err "Не должно быть аргументов"
+    exit 1
+  fi
+}
+```
+
+### outColor.sh:
+```
+#!/bin/bash
+
+source config.txt
+
+function outputColor() {
+  color-handler $FG1 FG1T;
+  color-handler $FG2 FG2T;
+  color-handler $BG1 BG1T;
+  color-handler $BG2 BG2T;
+
+  if [[ $1 = "default" ]]; then
+    column1_background=default
+    column1_font_color=default
+    column2_background=default
+    column2_font_color=default
+  fi
+  echo "Column 1 background = $column1_background ($BG1T)"
+  echo "Column 1 font color = $column1_font_color ($FG1T)"
+  echo "Column 2 background = $column2_background ($BG2T)"
+  echo "Column 2 font color = $column2_font_color ($FG2T)"
+  }
+
+  function color-handler() {
+  if [[ $1 = "$whiteF" ]] || [[ $1 = "$whiteBG" ]]; then
+    eval "$2='white'"
+  elif [[ $1 = "$redF" ]] || [[ $1 = "$redBG" ]]; then
+    eval "$2='red'"
+  elif [[ $1 = "$greenF" ]] || [[ $1 = "$greenBG" ]]; then
+    eval "$2='green'"
+  elif [[ $1 = "$blueF" ]] || [[ $1 = "$blueBG" ]]; then
+    eval "$2='blue'"
+  elif [[ $1 = "$purpleF" ]] || [[ $1 = "$purpleBG" ]]; then
+    eval "$2='purple'"
+  elif [[ $1 = "$blackF" ]] || [[ $1 = "$blackBG" ]]; then
+    eval "$2='black'"
+  fi
+}
+```
+
+### out.sh:
+```
+#!/bin/bash
+
+function outputColor() {
+  hostname=$HOSTNAME
+  timezone=`timedatectl | awk ' /Time zone/{print $3" "$4" "$5}'`
+  user=`whoami`
+  OS=`uname -s`
+  ip=(`ifconfig | awk ' /inet /{print $2} ' | xargs`)
+  mask=(`ifconfig | awk ' /inet /{print $4}' | xargs`)
+  gateway=`ip r | grep 'default via' | awk '{print $3}' | xargs`
+  ramTotal=`free -m | grep Mem | awk '{printf "%.3f\n", $2 / 1024}'`
+  ramUsed=`free -m | grep Mem | awk '{printf "%.3f\n", $3 / 1024}'`
+  ramFree=`free -m | grep Mem | awk '{printf "%.3f\n", $4 / 1024}'`
+  spaceRoot=`df -hk | grep "\/$" | awk '{printf "%.2f\n", $2 / 1024}'`
+  spaceRootUsed=`df -hk | grep "\/$" | awk '{printf "%.2f\n", $3 / 1024}'`
+  spaceRootFree=`df -hk | grep "\/$" | awk '{printf "%.2f\n", $4 / 1024}'`
+  echo -e "${BG1}${FG1}hostname${NORMAL}          = ${BG2}${FG2}$hostname${NORMAL}"
+  echo -e "${BG1}${FG1}timezone${NORMAL}          = ${BG2}${FG2}$timezone${NORMAL}"
+  echo -e "${BG1}${FG1}user${NORMAL}              = ${BG2}${FG2}$user${NORMAL}"
+  echo -e "${BG1}${FG1}OS${NORMAL}                = ${BG2}${FG2}$OS${NORMAL}"
+  ###
+  echo -n -e "${BG1}${FG1}ip${NORMAL}                = "
+  for (( i = 0; i < ${#ip[*]} ; i++ )); do
+    echo -n -e "${BG2}${FG2}${ip[i]} "
+  done
+  echo -e "${NORMAL}"
+
+  echo -n -e "${BG1}${FG1}mask${NORMAL}              = "
+  for (( i = 0; i < ${#mask[*]} ; i++ )); do
+    echo -n -e "${BG2}${FG2}${mask[i]} "
+  done
+  echo -e "${NORMAL}"
+  ###
+  echo -e "${BG1}${FG1}gateway${NORMAL}           = ${BG2}${FG2}$gateway${NORMAL}"
+  echo -e "${BG1}${FG1}Ram total${NORMAL}         = ${BG2}${FG2}$ramTotal Gb${NORMAL}"
+  echo -e "${BG1}${FG1}Ram used${NORMAL}          = ${BG2}${FG2}$ramUsed Gb${NORMAL}"
+  echo -e "${BG1}${FG1}Ram free${NORMAL}          = ${BG2}${FG2}$ramFree Gb${NORMAL}"
+  echo -e "${BG1}${FG1}Space root${NORMAL}        = ${BG2}${FG2}$spaceRoot Mb${NORMAL}"
+  echo -e "${BG1}${FG1}Space root used${NORMAL}   = ${BG2}${FG2}$spaceRootUsed Mb${NORMAL}"
+  echo -e "${BG1}${FG1}Space root free${NORMAL}   = ${BG2}${FG2}$spaceRootFree Mb${NORMAL}"
+}
+```
+
+### config.txt:
+```
+column1_background=2
+column1_font_color=4
+column2_background=5
+column2_font_color=1
+```
+### Вывод скрипта:
+![fourth bash script output](/src/screenshots/04.png)
+
+## Part 5. Исследование файловой системы
+
+**== Задание и выполнение ==**
+
+Написать bash-скрипт. Скрипт запускается с одним параметром.  
+Параметр - это абсолютный или относительный путь до какой-либо директории. Параметр должен заканчиваться знаком '/', например:  
 `script05.sh /var/log/`
 
-The script must output the following information about the directory specified in the parameter:
-- Total number of folders, including subfolders
-- Top 5 folders with largest size in descending order (path and size)
-- Total number of files
-- Number of configuration files (with .conf extension), text files, executable files, log files (files with .log extension), archives, symbolic links
-- Top 10 files with largest size in descending order (path, size and type)
-- Top 10 executable files with largest size in descending order (path, size and hash)
-- Execution time of the script
+Скрипт должен выводить следующую информацию о каталоге, указанном в параметре:
+- Общее число папок, включая вложенные
+- Топ 5 папок с самым большим весом в порядке убывания (путь и размер)
+- Общее число файлов
+- Число конфигурационных файлов (с расширением .conf), текстовых файлов, исполняемых файлов, логов (файлов с расширением .log), архивов, символических ссылок
+- Топ 10 файлов с самым большим весом в порядке убывания (путь, размер и тип)
+- Топ 10 исполняемых файлов с самым большим весом в порядке убывания (путь, размер и хеш)
+- Время выполнения скрипта
 
-The script should output the following information:
+Скрипт должен вывести на экран информацию в виде:
 
 ```
 Total number of folders (including all nested ones) = 6  
@@ -219,19 +552,138 @@ etc up to 10
 Script execution time (in seconds) = 1.5
 ```
 
+### main.sh
+```
+#!/bin/bash
 
-## Chapter IV
+source output.sh
+source topDir.sh
+source topFile.sh
+source topExe.sh
+source ../01/err.sh
 
-Well, now you've done all the work you wanted to do. You had to stay a little longer than usual, but it was worth it.
-You pack up your stuff and, on your way out of the office, you looked into the room where you heard your colleague earlier.
+function check() {
+  if [ $# -eq 1 ]; then
+    if [[ $1 =~ /$ ]]; then
+      if [[ -d "$1" ]]; then
+        output "$1"
+      else
+        err "Нет такой директории"
+        exit 1
+      fi
+    else
+      err "Введите директорию (путь должен заканчиваться на '/')"
+      exit 1
+    fi
+  else
+    err "Должен быть один параметр"
+    exit 1
+  fi
+}
 
-`-` Hey, may I come in? - you knocked on the door.
+check "$@"
+```
 
-`-` Yes... just a second. I didn't think there was anyone else here at this hour.
+### output.sh
+```
+#!/bin/bash
 
-The door opened and, after a short conversation, you handed the inexperienced sysadmin a flash drive with the scripts.
-You said goodbye and were about to leave when you remembered an important detail.
+function output() {
+  startTime=`date +%s%N`
+  dirNum=`find "$1" -type d | wc -l`
+  echo "Total number of folders (including all nested ones) = $((dirNum-1))"
+  echo "TOP 5 folders of maximum size arranged in descending order (path and size):"
+  topDir "$1"
+  echo "etc up to 5"
+  echo "Total number of files = "`find "$1" -type f | wc -l`""
 
-`-` Oh, I completely forgot to ask. What's your name?
+  echo "Number of:"
+  echo "Configuration files (with the .conf extension) = "`find "$1" -name "*.conf" | wc -l`""
+  echo "Text files = "`find "$1" -name "*.txt" | wc -l`""
+  echo "Executable files = "`find "$1" -type f -executable | wc -l`""
+  echo "Log files (with the extension .log) = "`find "$1" -name "*.log" | wc -l`""
+  echo "Archive files = "`find "$1" -name "*.tar"| wc -l`""
+  echo "Symolic links = "`find "$1" -type l | wc -l`""
+  echo "TOP 10 files of maximum size arranged in descending order (path, size and type):"
+  topFile "$1"
+  echo "etc up to 10"
+  echo "TOP 10 executable files of the maximum size arranged in descending order (path, size and MD5 hash of file):"
+  topExe "$1"
+  echo "etc up to 10"
+  endTime=$(date +%s%N)
+  diffms=$((($endTime - $startTime)/1000000))
+  diffs=$(($diffms/1000))
+  echo "Script execution time (in seconds) = $diffs.$diffms"            
+}
+```
 
-`-` Sebastian.
+### topDir.sh
+```
+#!/bin/bash
+
+function topDir() {
+  out=$(du -h "$1" \
+     | sort -rh \
+     | head -5 \
+     | awk '{print " - "$2", "$1 }')
+  IFS=$'\n'
+  count=0
+  for item in $out
+  do
+      (( count += 1 ))
+  echo "$count $item"
+  done
+}
+```
+
+### topExe.sh
+```
+#!/bin/bash
+
+function topExe() {
+  out="$(find "$1" -type f -executable -not -path '*/\.*' -exec du -h {} + 2>/dev/null \
+    | sort -hr \
+    | head -n 10 )"
+  IFS=$'\n'
+  count=0
+  for var in $out
+  do
+      (( count += 1 ))
+      path=$(echo "$var" | awk '{print $2}')
+      size=$(echo "$var" \
+        | awk '{print $1}' \
+        | sed -e 's:K: Kb:g' \
+        | sed 's:M: Mb:g' \
+        | sed 's:G: Gb:g' )
+      md5=$(md5sum "$path" | awk '{print $1}')
+      printf "%d - %s, %s, %s\n" $count "$path" "$size" "$md5"
+  done
+}
+```
+
+### topFile.sh
+```
+#!/bin/bash
+
+function topFile() {
+  out="$(find "$1" -type f -not -path '*/\.*' -exec du -h {} + 2>/dev/null \
+    | sort -hr \
+    | head -n 10 )"
+  IFS=$'\n'
+  count=0
+  for var in $out
+  do
+      (( count += 1 ))
+      file=$(echo "$var" | awk '{print $2}')
+      size=$(echo "$var" \
+        | awk '{print $1}' \
+        | sed -e 's:K: Kb:g' \
+        | sed 's:M: Mb:g' \
+        | sed 's:G: Gb:g' )
+      type=$(echo "$var" | awk '{ tp=split($2,type,".") ; print type[tp] }' )
+      printf "%d - %s, %s, %s\n" $count "$file" "$size" "$type"
+  done
+}
+```
+### Вывод скрипта:
+![fifth bash script output](/src/screenshots/05.png)
